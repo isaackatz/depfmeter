@@ -1609,7 +1609,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  8000b08:	80fb      	strh	r3, [r7, #6]
  8000b0a:	f107 0318 	add.w	r3, r7, #24
  8000b0e:	60fb      	str	r3, [r7, #12]
-
+				calculate();
 
 			}
 		}

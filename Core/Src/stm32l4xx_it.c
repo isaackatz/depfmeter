@@ -50,7 +50,7 @@ uint32_t D1, D2;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-
+void calculate(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -290,7 +290,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 				D2 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[0]);
 
-
+				calculate();
 
 			}
 		}
