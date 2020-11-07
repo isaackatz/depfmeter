@@ -47,7 +47,9 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+uint8_t rx_buffer[3];
+uint16_t C[7];
+uint32_t D1, D2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,7 +61,7 @@ static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
-
+void calculate(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
@@ -339,6 +341,49 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	if (GPIO_Pin == GPIO_PIN_8) {
+		void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {	//if diver holds button for 5 secs calcul starts
+			if (htim->Instance == TIM1) {
+				//resetting the device first
+				HAL_I2C_Master_Transmit_IT(&hi2c1, DEVICE_ADDR, RES_DEVICE, COMMAND_LENGTH);
+				//receiving the coefs
+				for (uint8_t i = 0; i < 7; i++) {
+					uint8_t prom_buff[2];
+					HAL_I2C_Master_Transmit_IT(&hi2c1, DEVICE_ADDR, PROM_READ + i * 2, COMMAND_LENGTH);
+
+					HAL_I2C_Master_Receive_IT(&hi2c1, DEVICE_ADDR, prom_buff, PROM_LENGTH);
+
+					C[i] = (prom_buff[0] << 8) | (prom_buff[1]);
+
+				}
+				//initializing D1 conversion
+				HAL_I2C_Master_Transmit_IT(&hi2c1, DEVICE_ADDR, CONVERT_D1, COMMAND_LENGTH);
+				HAL_Delay(10);
+
+				uint8_t adc_buff[3];
+				//reading D1 data
+				HAL_I2C_Master_Transmit_IT(&hi2c1, DEVICE_ADDR, ADC_READ, COMMAND_LENGTH);
+				HAL_I2C_Master_Receive_IT(&hi2c1, DEVICE_ADDR, adc_buff, ADC_LENGTH);
+
+				D1 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[2]);
+
+				//initializing D2 conversion
+				HAL_I2C_Master_Transmit_IT(&hi2c1, DEVICE_ADDR, CONVERT_D2, COMMAND_LENGTH);
+				HAL_Delay(10);
+
+				//reading D2 data
+				HAL_I2C_Master_Transmit_IT(&hi2c1, DEVICE_ADDR, ADC_READ, COMMAND_LENGTH);
+				HAL_I2C_Master_Receive_IT(&hi2c1, DEVICE_ADDR, adc_buff, ADC_LENGTH);
+
+				D2 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[0]);
+
+				calculate();
+
+			}
+		}
+	}
+}
 /* USER CODE END 4 */
 
 /**
