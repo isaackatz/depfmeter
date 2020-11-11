@@ -1,4 +1,4 @@
-Core/Src/calculation.o: ../Core/Src/calculation.c ../Core/Inc/main.h \
+Core/Src/MS5837-30BA.o: ../Core/Src/MS5837-30BA.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
