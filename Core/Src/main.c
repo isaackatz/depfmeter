@@ -372,7 +372,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 			HAL_I2C_Master_Receive(&hi2c1, DEVICE_ADDR, adc_buff,
 					ADC_LENGTH, RECEIVE_TIME);
 
-			D2 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[0]);
+			D2 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[2]);
 
 			calculate();
 

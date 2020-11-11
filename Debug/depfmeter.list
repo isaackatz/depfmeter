@@ -2189,13 +2189,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  80014fc:	f000 fef0 	bl	80022e0 <HAL_I2C_Master_Receive>
 					ADC_LENGTH, RECEIVE_TIME);
 
-			D2 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[0]);
+			D2 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[2]);
  8001500:	7b3b      	ldrb	r3, [r7, #12]
  8001502:	041a      	lsls	r2, r3, #16
  8001504:	7b7b      	ldrb	r3, [r7, #13]
  8001506:	021b      	lsls	r3, r3, #8
  8001508:	4313      	orrs	r3, r2
- 800150a:	7b3a      	ldrb	r2, [r7, #12]
+ 800150a:	7bba      	ldrb	r2, [r7, #14]
  800150c:	4313      	orrs	r3, r2
  800150e:	461a      	mov	r2, r3
  8001510:	4b0a      	ldr	r3, [pc, #40]	; (800153c <HAL_GPIO_EXTI_Callback+0x15c>)
