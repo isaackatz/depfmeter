@@ -43,13 +43,18 @@
 I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim1;
-
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 uint8_t rx_buffer[3];
 uint16_t C[7];
 uint32_t D1, D2;
+uint8_t RES_DEVICE = 0x1E;
+uint8_t CONVERT_D1 = 0x4A;
+uint8_t CONVERT_D2 = 0x5A;
+uint8_t ADC_READ = 0x00;
+uint8_t PROM_READ = 0xA0;
+int32_t result;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,9 +64,9 @@ static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
-
+int32_t calculate();
 /* USER CODE END PFP */
-void calculate(void);
+
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 /* USER CODE END 0 */
@@ -72,7 +77,7 @@ void calculate(void);
  */
 int main(void) {
 	/* USER CODE BEGIN 1 */
-
+	HAL_StatusTypeDef ret;
 	/* USER CODE END 1 */
 
 	/* MCU Configuration--------------------------------------------------------*/
@@ -97,12 +102,68 @@ int main(void) {
 	MX_I2C1_Init();
 	MX_TIM1_Init();
 	/* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim1);
+	//HAL_TIM_Base_Start_IT(&htim1);
+	HAL_TIM_Base_Start(&htim1);
+	HAL_I2C_Init(&hi2c1);
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+				HAL_TIM_Base_Start(&htim1);
+				if (TIM1->CNT == 19000) {//if diver holds button for 5 secs calcul starts
+					//resetting the device first
+					uint8_t *p;
+					p = &RES_DEVICE;
+					HAL_I2C_Master_Transmit(&hi2c1, DEVICE_ADDR, p, COMMAND_LENGTH, HAL_MAX_DELAY);
+					uint8_t prom_addr = 160;
+					//receiving the coefs
+					for (uint8_t i = 0; i < 8; i++) {
+						uint8_t prom_buff[2];
+						prom_addr += 2;
+						p = &prom_addr;
+						HAL_I2C_Master_Transmit(&hi2c1, DEVICE_ADDR, p, COMMAND_LENGTH, HAL_MAX_DELAY);
+
+						HAL_I2C_Master_Receive(&hi2c1, DEVICE_ADDR, prom_buff, PROM_LENGTH, HAL_MAX_DELAY);
+
+						C[i] = (prom_buff[0] << 8) | (prom_buff[1]);
+					}
+					//initializing D1 conversion
+					p = &CONVERT_D1;
+					ret = HAL_I2C_Master_Transmit(&hi2c1, DEVICE_ADDR, p, COMMAND_LENGTH, HAL_MAX_DELAY);
+					HAL_Delay(18.08);
+
+					uint8_t adc_buff[3];
+					//reading D1 data
+					p = &ADC_READ;
+					ret = HAL_I2C_Master_Transmit(&hi2c1, DEVICE_ADDR, p, COMMAND_LENGTH, HAL_MAX_DELAY);
+					HAL_Delay(300);
+					HAL_I2C_Master_Receive(&hi2c1, DEVICE_ADDR, adc_buff, ADC_LENGTH, HAL_MAX_DELAY);
+
+					D1 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[2]);
+
+					//initializing D2 conversion
+					p = &CONVERT_D2;
+					HAL_I2C_Master_Transmit(&hi2c1, DEVICE_ADDR, p,
+							COMMAND_LENGTH, HAL_MAX_DELAY);
+					HAL_Delay(18.08);
+
+					//reading D2 data
+					p = &ADC_READ;
+					HAL_I2C_Master_Transmit(&hi2c1, DEVICE_ADDR, p,
+							COMMAND_LENGTH, HAL_MAX_DELAY);
+					HAL_I2C_Master_Receive(&hi2c1, DEVICE_ADDR, adc_buff,
+							ADC_LENGTH, HAL_MAX_DELAY);
+
+					D2 = (adc_buff[0] << 16) | (adc_buff[1] << 8) | (adc_buff[2]);
+
+
+
+					result = calculate();
+
+					HAL_TIM_Base_Stop(&htim1);
+					TIM1->CNT = 0;
+				}
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -328,7 +389,7 @@ static void MX_GPIO_Init(void) {
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+/*void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == GPIO_PIN_8) {
 		HAL_TIM_Base_Start(&htim1);
 		if (TIM1->CNT == 60000) {//if diver holds button for 5 secs calcul starts
@@ -379,7 +440,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 		}
 		TIM1->CNT = 0;
 	}
-}
+}*/
 
 /* USER CODE END 4 */
 
